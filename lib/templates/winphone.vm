@@ -1,0 +1,107 @@
+/*
+ *generation date:${genDate}
+ *tool version:${genToolVersion}
+ *template version:5.0.0
+ */
+
+using System;
+using System.Collections.Generic;
+using Alipay.MobileSDK.RPC.Network.Rpc;
+using System.Threading.Tasks;
+
+#foreach ( $packagename in $model.getPackagesOfImports())
+using $packagename;
+#end
+#if (!$model.packageName.equals(""))
+namespace $model.packageName{
+#end
+    public class $model.className : ${model.getSuperClassName()}
+    {
+//Constants
+#foreach ($constant in $model.constants)
+        public $constant.getString()   
+#end
+
+#foreach ($field in $model.fields)
+$field.getJavaDoc()
+#*	        	*##if ($field.typeIsParameterizedType4Cocoa())				
+        public $field.getFieldType4Winphone()<$field.getFieldTypeArgument4Winphone()> $field.getFieldName() { get; set; }  
+#else
+        public $field.getFieldType4Winphone() $field.getFieldName() { get; set; } 		
+#*	        	*##end  
+#end
+      	public int PageHashCode { get; set; }    
+#foreach ($method in $model.methods)
+			#set( $count = $method.getParamCount() - 1 )
+		 	#set( $arr = [0..$count] )
+			#*		*##if ($model.interfaceType)
+			##			/*********************************
+			##			*sysName: ${sysName}
+			##			*interfaceName: ${model.packageName}.${model.className}
+			##			*methodName: $method.getMethodName()     
+			##			*method return type: $method.getReturnType4Winphone()		 	
+			##			#foreach( $i in $arr )
+			##			*param$i $method.getParamType4Winphone($i) $method.getParamName($i)
+			##			#end
+			##			********************************/
+#*		*##end
+$method.getJavaDoc()
+			
+#if ($method.getReturnType4Winphone() != "void")	
+		public async Task<$method.getReturnType4Winphone()> $method.getMethodName()(##
+#else
+		public async void $method.getMethodName()(##
+#end
+#*		*##if ($method.getParamCount() != 0)
+#*				*##foreach( $i in $arr )
+$method.getParamType4Winphone($i) $method.getParamName($i) ##
+#*						*##if ($i != $count) 
+, ##
+#*						*##end
+#*				*##end
+
+#if ($method.getReturnType4Winphone() != "void")
+			, int pageHashCode 
+#end
+#else
+#if ($method.getReturnType4Winphone() != "void")
+			 int pageHashCode 
+#end
+#*		*##end
+)
+		{
+        	Task<$method.getReturnType4Winphone()> task = new Task<$method.getReturnType4Winphone()>(() =>
+            {
+            	DTRpcClient client = DTRpcClient.Instance;
+            	DTRpcMethod method = new DTRpcMethod();
+            	method.operationType = $method.getOpType();
+            	method.checkLogin = #if ($method.isCheckLogin()) true #else false #end;
+            	method.returnType = "$method.getReturnType4Winphone()";
+            	List<object> list = null;
+#*        *##if ($method.getParamCount() != 0)
+            	list = new List<object>();
+#*                *##foreach( $i in $arr )
+            	list.Add($method.getParamName($i));
+#*                *##end
+#*        *##end
+#*		*##if ($method.getReturnType4Winphone() != "void")	
+				$method.getReturnType4Winphone() obj = null;
+				try{
+					obj = ($method.getReturnType4Winphone())client.executeMethod<object, $method.getReturnType4Winphone()>(method, list);
+					obj.PageHashCode=pageHashCode;
+				}
+				catch(Exception e)
+                {                    
+                }
+            	return obj;
+#*		*##else
+				($method.getReturnType4Winphone())client.executeMethod<object, $method.getReturnType4Winphone()>(method, list);
+#*		*##end
+            	
+             });
+            task.Start();
+            return await task;
+        }
+#end
+    }
+}

@@ -1,0 +1,120 @@
+/*
+ *generation date:${genDate}
+ *tool version:${genToolVersion}
+ *template version:4.2.3
+ */
+#set( $SYSNAME = $sysName.toUpperCase() )
+
+
+#foreach ( $import in $model.imports)
+#import "${import.getName4Cocoa()}.h"
+#end
+#import "${model.getCocoaClassName()}.h"
+
+
+@implementation ${model.getCocoaClassName()}
+
+#foreach ($field IN $model.fields)
+#*		*##if ($field.typeIsParameterizedType4Cocoa())
++ (Class)${field.getFieldName()}ElementClass{
+	return  $field.getFieldTypeArgument4Cocoa() ;
+}
+#*		*##end
+#end
+
+#foreach ($method in $model.methods)
+##
+#*		*##if ($method.returnTypeIsPrimitive4Cocoa())
+-($method.getReturnType4Cocoa()) ##
+#*		*##else
+-($method.getReturnType4Cocoa() *) ##
+#*		*##end
+##
+#*		*##if ($method.getParamCount() == 0)
+$method.getMethodName()#if($model.showHeader)
+RequestHeader:(NSDictionary*)header
+#end
+#*		*##elseif ($method.getParamCount() == 1)
+#*				*##if ($method.paramTypeIsPrimitive4Cocoa(0))
+$method.getMethodName():($method.getParamType4Cocoa(0) )$method.getParamName(0)	
+#*			  *##else
+$method.getMethodName():($method.getParamType4Cocoa(0) *)$method.getParamName(0) 
+#*			  *##end
+#*		*##else
+#*				*##if ($method.paramTypeIsPrimitive4Cocoa(0))
+$method.getMethodName():($method.getParamType4Cocoa(0) )$method.getParamName(0)	
+#*			  *##else
+$method.getMethodName():($method.getParamType4Cocoa(0) *)$method.getParamName(0)	
+#*			  *##end
+##			
+#*			  *##set( $count = $method.getParamCount() - 1 )
+#*			  *##set( $arr = [1..$count] )
+#*			  *##foreach( $i in $arr )			
+#*					  *##if ($method.paramTypeIsPrimitive4Cocoa($i))
+				$method.getParamName($i):($method.getParamType4Cocoa($i) )$method.getParamName($i)
+#*					  *##else 
+				$method.getParamName($i):($method.getParamType4Cocoa($i) *)$method.getParamName($i)
+#*					  *##end
+#*				*##end		 
+#*		*##end
+#if($model.showHeader)
+	#if ($method.getParamCount() != 0)
+			requestHeader:(NSDictionary*)header
+	#end
+#end
+{
+	DTRpcMethod *method = [[DTRpcMethod alloc] init];
+	method.operationType = @${method.getOpType()};
+	method.checkLogin = #if ($method.isCheckLogin()) YES #else NO #end;
+	method.signCheck = #if ($method.isSignCheck()) YES #else NO #end;
+	method.returnType =   @"$method.getReturnTypeSymbol4Cocoa()" ; 
+#*		*##if ($method.returnTypeIsParameterizedType4Cocoa())##
+	method.elementClass = $method.getReturnTypeArgument4Cocoa();
+#*		*##end
+
+#*		*##if ($method.needReturn())
+	return ##
+#*				*##if ($method.returnTypeIsPrimitive4Cocoa())
+[ ##
+#*				*##end
+#*		*##else
+	##
+#*		*##end  
+#*		*##if ($method.getParamCount() == 0)
+ [DTRpcClient defaultClient] executeMethod:method params:nil
+#if($model.showHeader)
+		requestHeaderField:header responseHeaderFields:nil ] ;
+#else
+];
+#end 
+#*		*##else  
+[ [DTRpcClient defaultClient] executeMethod:method params:@[
+#*				*##set( $count = $method.getParamCount() - 1 )
+#*				*##set( $arr = [0..$count] )
+#*				*##foreach( $i in $arr )
+#*						*##if ($i == 0)
+		$method.getParamNameObject($i) ? $method.getParamNameObject($i) : [NSNull null]##
+#*						*##else##
+,
+		$method.getParamNameObject($i) ? $method.getParamNameObject($i) : [NSNull null]##
+#*						*##end			
+#*				*##end
+]
+#if($model.showHeader)
+		requestHeaderField:header responseHeaderFields:nil ]
+#else
+ ]
+#end 
+##
+#*	        	*##if ($method.returnTypeIsPrimitiveAndNotVoid4Cocoa())
+ $method.primitiveReturnTypeValueMethodName() ]##
+#*	        	*##end
+ ;	
+#*		*##end
+}
+
+/**************************************************************************/
+#end                       
+@end
+	
+	

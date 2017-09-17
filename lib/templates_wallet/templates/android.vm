@@ -1,0 +1,87 @@
+/*
+ *generation date:${genDate}
+ *tool version:${genToolVersion}
+ *template version:4.2.3
+ */
+#if (!$model.packageName.equals(""))
+package $model.packageName;
+#end
+
+import java.lang.Boolean;
+import java.lang.Byte;
+import java.lang.Character;			
+import java.lang.Double;
+import java.lang.Float;
+import java.lang.Integer;
+import java.lang.Long;
+import java.lang.Short;
+import java.lang.String;
+import java.lang.Object;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Date;
+import java.io.Serializable;
+import com.alipay.mobile.framework.service.ext.annotation.CheckLogin;
+import com.alipay.mobile.framework.service.annotation.SignCheck;
+import com.alipay.mobile.framework.service.annotation.OperationType;
+import com.alipay.mobile.framework.service.ext.BizResult;
+
+#foreach ( $import in $model.imports)
+import $import.getName();
+#end
+
+#if ($model.interfaceType)
+public interface  $model.className {
+#else
+public class $model.className extends ${model.getSuperClassName()}
+#*  *##if ($model.fields.size() > 0)
+implements Serializable
+ #*  *##end
+{
+#end
+
+//Constants
+#foreach ($constant in $model.constants)
+		$constant.getString()   
+#end
+
+#foreach ($field in $model.fields)
+  $field.getField()
+#end
+
+#foreach ($method in $model.methods)
+			#set( $count = $method.getParamCount() - 1 )
+		 	#set( $arr = [0..$count] )
+#*		*##if ($model.interfaceType)
+##			/*********************************
+##			*sysName: ${sysName}
+##			*interfaceName: ${model.packageName}.${model.className}
+##			*methodName: $method.getMethodName()     
+##			*method return type: $method.getReturnType()		 	
+##			#foreach( $i in $arr )
+##			*param$i $method.getParamType($i) $method.getParamName($i)
+##			#end
+##			********************************/
+#*		*##end
+$method.getJavaDoc()
+    @OperationType(${method.getOpType()}) 
+#*		*##if (${method.isCheckLogin()})
+    @CheckLogin
+#*		*##end
+#*		*##if (${method.isSignCheck()})
+	@SignCheck		
+#*		*##end
+    public $method.getReturnType() $method.getMethodName()(##
+#*		*##if ($method.getParamCount() != 0)
+#*				*##foreach( $i in $arr )
+$method.getParamType($i) $method.getParamName($i) ##
+#*						*##if ($i != $count) 
+, ##
+#*						*##end
+#*				*##end
+#*		*##end
+);
+
+#end	
+}//end of class def

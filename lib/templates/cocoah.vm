@@ -1,0 +1,97 @@
+//$model.packageName.$model.className
+/*
+ *generation date:${genDate}
+ *tool version:${genToolVersion}
+ *template version:4.1.1
+ */
+#set( $SYSNAME = $sysName.toUpperCase() )
+
+#foreach ( $import in $model.imports)
+@class ${import.getName4Cocoa()};
+#end
+																			 
+#if (!${model.getSuperClassNameForCocoa().equals("NSObject")} 
+&& !${model.getSuperClassNameForCocoa().equals("BizResult")})
+#import "${model.getSuperClassNameForCocoa()}.h"
+#end
+
+#if ($model.constants.size() != 0)
+typedef enum ${SYSNAME}${model.className}Enum {
+#*		*##set( $thefirst= true )
+#*		*##foreach ($constant in $model.constants)
+	  	${SYSNAME}${model.className}_$constant.getStringForCocoa(), 
+#*		*##end
+} ${SYSNAME}${model.className}Enum;
+#end
+
+   
+##//∏∏¿‡
+@interface ${SYSNAME}$model.className : ${model.getSuperClassNameForCocoa()}
+
+#foreach ($field in $model.fields)
+
+$field.getJavaDoc()##
+#*	*##if ($field.isPrimitive4Cocoa())
+#*	*#@property(nonatomic, assign) $field.getFieldType4Cocoa() $field.getFieldName();
+#*	*##else
+#*	*#@property(nonatomic, strong) $field.getFieldType4Cocoa() *$field.getFieldName();
+#*	*##if ($field.typeIsParameterizedType4Cocoa())
+#*  	*#+ (Class)${field.getFieldName()}ElementClass;
+#*  	*##end                     
+#*  *##end
+#end
+#*  	*#
+#*  	*#
+
+#if ($model.interfaceType)
+#*  	*#
+#foreach ($method in $model.methods)
+
+##			*sysName: ${sysName}
+##			*interfaceName: ${model.packageName}.${model.className}
+##			*methodName: $method.getMethodName()
+##			*method return type: $method.getReturnType()
+##		 	#set( $count = $method.getParamCount() - 1 )
+##		 	#set( $arr = [0..$count] )
+##			#foreach( $i in $arr )
+##			*param$i $method.getParamType($i) $method.getParamName($i)
+##			#end
+$method.getJavaDoc()##
+-(id)##
+##
+#*		*##if ($method.getParamCount() == 0)
+$method.getMethodName()##
+#*		*##elseif ($method.getParamCount() == 1)
+#*				*##if ($method.paramTypeIsPrimitive4Cocoa(0))
+$method.getMethodName():($method.getParamType4Cocoa(0))$method.getParamName(0) ##
+#*			  *##else
+$method.getMethodName():($method.getParamType4Cocoa(0) *)$method.getParamName(0) ##
+#*			  *##end
+#*		*##else
+#*				*##if ($method.paramTypeIsPrimitive4Cocoa(0))
+$method.getMethodName():($method.getParamType4Cocoa(0))$method.getParamName(0)##
+#*			  *##else
+$method.getMethodName():($method.getParamType4Cocoa(0) *)$method.getParamName(0)##
+#*			  *##end
+##			
+#*			  *##set( $count = $method.getParamCount() - 1 )
+#*			  *##set( $arr = [1..$count] )
+#*			  *##foreach( $i in $arr )			
+#*					  *##if ($method.paramTypeIsPrimitive4Cocoa($i))
+
+				$method.getParamName($i):($method.getParamType4Cocoa($i))$method.getParamName($i)##
+#*					  *##else 
+
+				$method.getParamName($i):($method.getParamType4Cocoa($i) *)$method.getParamName($i)##
+#*					  *##end
+#*				*##end
+#*		*##end
+;
+
+#end ## end of foreach ($method in $model.methods)
+	
+#end  ## end of if ($model.interfaceType)
+                             
+@end
+	
+	
